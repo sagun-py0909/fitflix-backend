@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model memberships {
+  membership_id    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  branch_id        String             @db.Uuid
+  name             String?            @db.VarChar(100)
+  description      String?
+  duration_days    Int
+  price_rupees     Int
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  branches         branches           @relation(fields: [branch_id], references: [branch_id], onDelete: Cascade, onUpdate: NoAction)
+  user_memberships user_memberships[]
+}
+
+model payments {
+  payment_id     String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String              @db.Uuid
+  amount_cents   Int
+  currency       String              @default("INR") @db.Char(3)
+  payment_date   DateTime            @default(now()) @db.Timestamptz(6)
+  payment_method String?             @db.VarChar(50)
+  reference_code String?             @db.VarChar(100)
+  status         payment_status_enum @default(success)
+  users          users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_payments_user_id")
+}
+
+model progress_entries {
+  entry_id      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String?   @db.Uuid
+  date_recorded DateTime  @db.Date
+  weight_kg     Decimal?  @db.Decimal(5, 2)
+  body_fat_pct  Decimal?  @db.Decimal(5, 2)
+  notes         String?
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  users         users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_progress_entries_user_id")
+}
+
+model user_memberships {
+  user_membership_id String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id            String                 @db.Uuid
+  membership_id      String                 @db.Uuid
+  start_date         DateTime               @db.Date
+  end_date           DateTime               @db.Date
+  status             membership_status_enum @default(active)
+  created_at         DateTime               @default(now()) @db.Timestamptz(6)
+  memberships        memberships            @relation(fields: [membership_id], references: [membership_id], onDelete: Cascade, onUpdate: NoAction)
+  users              users                  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_user_memberships_user_id")
+}
+
+model user_profiles {
+  profile_id       String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String       @unique @db.Uuid
+  date_of_birth    DateTime?    @db.Date
+  gender           gender_enum?
+  height_cm        Decimal?     @db.Decimal(5, 2)
+  weight_kg        Decimal?     @db.Decimal(5, 2)
+  food_preferences String[]     @default([])
+  lifestyle        Json?
+  created_at       DateTime?    @default(now()) @db.Timestamptz(6)
+  users            users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_profile_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  user_id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String             @unique @db.VarChar(255)
+  password_hash    String
+  first_name       String?            @db.VarChar(100)
+  last_name        String?            @db.VarChar(100)
+  phone            String?            @db.VarChar(20)
+  role             user_role_enum     @default(member)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  is_deleted       Boolean            @default(false)
+  payments         payments[]
+  progress_entries progress_entries[]
+  user_memberships user_memberships[]
+  user_profiles    user_profiles?
+
+  @@index([email], map: "idx_users_email")
+  @@index([role], map: "idx_users_role")
+}
+
+model gym_types {
+  gym_type_id String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String     @unique @db.VarChar(50)
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  branches    branches[]
+}
+
+model branches {
+  branch_id       String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gym_type_id     String        @db.Uuid
+  name            String        @db.VarChar(150)
+  address         String?
+  city            String?       @db.VarChar(100)
+  contact_number  String?       @db.VarChar(20)
+  opening_hours   String?       @db.VarChar(100)
+  latitude        Decimal?      @db.Decimal(9, 6)
+  longitude       Decimal?      @db.Decimal(9, 6)
+  google_maps_url String?
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  is_deleted      Boolean       @default(false)
+  gym_types       gym_types     @relation(fields: [gym_type_id], references: [gym_type_id], onUpdate: NoAction)
+  memberships     memberships[]
+
+  @@index([city], map: "idx_branches_city")
+}
+
+enum gender_enum {
+  male
+  female
+  other
+}
+
+enum membership_status_enum {
+  not_started
+  active
+  started
+  ended
+  expired
+  cancelled
+}
+
+enum payment_status_enum {
+  success
+  pending
+  failed
+  refunded
+}
+
+enum user_role_enum {
+  admin
+  member
+  trainer
+  staff
+}
