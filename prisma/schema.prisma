@@ -9,13 +9,13 @@ datasource db {
 
 model memberships {
   membership_id    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  branch_id        String             @db.Uuid
+  gym_id           String             @db.Uuid
   name             String?            @db.VarChar(100)
   description      String?
   duration_days    Int
   price_rupees     Int
   created_at       DateTime           @default(now()) @db.Timestamptz(6)
-  branches         branches           @relation(fields: [branch_id], references: [branch_id], onDelete: Cascade, onUpdate: NoAction)
+  gyms             gyms               @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade)
   user_memberships user_memberships[]
 }
 
@@ -85,6 +85,7 @@ model users {
   created_at       DateTime           @default(now()) @db.Timestamptz(6)
   updated_at       DateTime           @default(now()) @db.Timestamptz(6)
   is_deleted       Boolean            @default(false)
+  gyms             gyms[]
   payments         payments[]
   progress_entries progress_entries[]
   user_memberships user_memberships[]
@@ -95,29 +96,39 @@ model users {
 }
 
 model gym_types {
-  gym_type_id String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String     @unique @db.VarChar(50)
-  created_at  DateTime   @default(now()) @db.Timestamptz(6)
-  branches    branches[]
+  gym_type_id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(50)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  gyms        gyms[]
 }
 
-model branches {
-  branch_id       String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gym_type_id     String        @db.Uuid
-  name            String        @db.VarChar(150)
+model gym_info {
+  info_id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  gym_id          String    @db.Uuid
   address         String?
-  city            String?       @db.VarChar(100)
-  contact_number  String?       @db.VarChar(20)
-  opening_hours   String?       @db.VarChar(100)
-  latitude        Decimal?      @db.Decimal(9, 6)
-  longitude       Decimal?      @db.Decimal(9, 6)
+  city            String?   @db.VarChar(100)
+  contact_number  String?   @db.VarChar(20)
+  branch_phone    String?   @db.VarChar(20)
+  branch_email    String?   @db.VarChar(150)
+  opening_hours   String?   @db.VarChar
+  latitude        Decimal?  @db.Decimal(9, 6)
+  longitude       Decimal?  @db.Decimal(9, 6)
   google_maps_url String?
-  created_at      DateTime      @default(now()) @db.Timestamptz(6)
-  is_deleted      Boolean       @default(false)
-  gym_types       gym_types     @relation(fields: [gym_type_id], references: [gym_type_id], onUpdate: NoAction)
-  memberships     memberships[]
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  gyms            gyms      @relation("GymToInfo", fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_gym_info_gym")
+}
 
-  @@index([city], map: "idx_branches_city")
+model gyms {
+  gym_id            String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name              String        @db.VarChar(150)
+  branch_manager_id String?       @db.Uuid
+  created_at        DateTime?     @default(now()) @db.Timestamp(6)
+  city              String?       @db.VarChar(100)
+  gym_type_id       String        @db.Uuid
+   gym_info          gym_info[]    @relation("GymToInfo")
+  users             users?        @relation(fields: [branch_manager_id], references: [user_id], map: "fk_gym_manager")
+  gym_types         gym_types     @relation(fields: [gym_type_id], references: [gym_type_id], onDelete: SetNull, map: "fk_gym_type")
+  memberships       memberships[]
 }
 
 enum gender_enum {
