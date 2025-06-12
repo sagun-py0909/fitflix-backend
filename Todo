@@ -1,0 +1,58 @@
+🔐 Authentication
+
+
+POST /auth/login – Login and receive JWT token
+
+
+
+👤 User Profile
+GET /user/profile
+
+PUT /user/profile – Update profile (e.g., weight, height, preferences)
+
+🏋️‍♂️ Gym Discovery
+GET /gyms – List gyms (basic info)
+
+GET /gyms/:id – Full gym details (info, services, amenities, staff)
+
+💳 Memberships
+GET /memberships/:gymId – View available memberships for a gym
+
+POST /user-memberships – Purchase/subscribe to a membership
+
+GET /user-memberships – View active/past user memberships
+
+🧑‍🏫 Trainers & PT
+GET /trainers/:gymId – List trainers in a gym
+
+POST /user-trainers – Assign a trainer and record payment
+
+🎯 Services & Activities
+GET /services/:gymId – Services offered by a gym
+
+GET /activities/:gymId – View activities
+
+📅 Events
+GET /events/:gymId – View upcoming events
+
+POST /event-bookings – Book an event
+
+GET /event-bookings – View your bookings
+
+POST /event-attendance/:eventId – Mark/check attendance (QR or manual)
+
+💸 Payments
+GET /payments – View all user payments
+
+GET /payments/:id – View specific payment details
+
+routes/user/
+  ├─ auth.routes.js
+  ├─ profile.routes.js
+  ├─ membership.routes.js
+  ├─ trainer.routes.js
+  ├─ gym.routes.js
+  ├─ service.routes.js
+  ├─ activity.routes.js
+  ├─ event.routes.js
+  └─ payment.routes.js
