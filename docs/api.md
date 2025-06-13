@@ -1,16 +1,21 @@
-## Fitflix Backend API Documentation
+```markdown
+# Fitflix Backend API Documentation
 
 ### Base URL
 
 `http://localhost:3000/api`
 
-### Authentication
+---
 
-All endpoints under `/admin` and `/user` require a valid JWT in the `Authorization` header:
+## Authentication
+
+All endpoints under `/admin`, `/user`, and other protected modules require a valid JWT in the `Authorization` header:
 
 ```
-Authorization: Bearer <your_jwt_token>
-```
+
+Authorization: Bearer \<your\_jwt\_token>
+
+````
 
 ---
 
@@ -18,9 +23,9 @@ Authorization: Bearer <your_jwt_token>
 
 ### 1.1 Gym Management
 
-* **Create Gym**
-  `POST /admin/gyms`
-  **Body** (JSON)
+- **Create Gym**  
+  `POST /admin/gyms`  
+  **Body**
 
   ```json
   {
@@ -31,7 +36,7 @@ Authorization: Bearer <your_jwt_token>
     "open_time": "2025-06-01T06:00:00Z",
     "close_time": "2025-06-01T22:00:00Z"
   }
-  ```
+````
 
 * **Get All Gyms**
   `GET /admin/gyms`
@@ -41,7 +46,6 @@ Authorization: Bearer <your_jwt_token>
 
 * **Update Gym**
   `PUT /admin/gyms/:gymId`
-  **Body**: any of the create fields (all optional)
 
 * **Delete Gym**
   `DELETE /admin/gyms/:gymId`
@@ -78,14 +82,13 @@ Authorization: Bearer <your_jwt_token>
 
 * **Update Staff**
   `PUT /admin/staff/:staffId`
-  **Body**: any create fields (all optional, plus password)
 
 * **Delete Staff**
   `DELETE /admin/staff/:staffId`
 
 ---
 
-### 1.3 Membership Management
+### 1.3 Membership Type Management (Global Templates)
 
 * **Create Membership Type**
   `POST /admin/membership-types`
@@ -94,7 +97,7 @@ Authorization: Bearer <your_jwt_token>
   ```json
   {
     "name": "Standard Plan",
-    "description": "...",
+    "description": "Includes all group classes",
     "price": 4999,
     "duration_months": 1
   }
@@ -108,22 +111,51 @@ Authorization: Bearer <your_jwt_token>
 
 * **Update Membership Type**
   `PUT /admin/membership-types/:typeId`
-  **Body**: any create fields (all optional)
 
 * **Delete Membership Type**
   `DELETE /admin/membership-types/:typeId`
 
 ---
 
-### 1.4 Analytics
+### 1.4 Memberships by Gym
 
-* **Get Total Users**
+* **Create Membership for a Gym**
+  `POST /admin/gyms/:gymId/memberships`
+  **Body**
+
+  ```json
+  {
+    "name": "Gold Membership",
+    "description": "Access to all equipment and classes",
+    "price_rupees": 2500,
+    "duration_days": 30
+  }
+  ```
+
+* **Get All Memberships for a Gym**
+  `GET /admin/gyms/:gymId/memberships`
+
+* **Get Specific Membership by ID**
+  `GET /admin/gyms/:gymId/memberships/:membershipId`
+
+* **Update Membership for a Gym**
+  `PUT /admin/gyms/:gymId/memberships/:membershipId`
+  **Body** (any of the create fields + `status`)
+
+* **Soft Delete Membership**
+  `DELETE /admin/gyms/:gymId/memberships/:membershipId`
+
+---
+
+### 1.5 Analytics
+
+* **Total Users**
   `GET /admin/analytics/total-users`
 
-* **Get Total Revenue**
+* **Total Revenue**
   `GET /admin/analytics/total-revenue`
 
-* **Get Total Check-ins**
+* **Total Check-ins**
   `GET /admin/analytics/total-checkins`
 
 ---
@@ -152,7 +184,7 @@ Authorization: Bearer <your_jwt_token>
 
 * **Update Profile**
   `PUT /user/profile`
-  **Body**: any of
+  **Body**
 
   ```json
   {
@@ -202,4 +234,7 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-*End of API documentation.*
+*End of `api.md`.*
+
+```
+

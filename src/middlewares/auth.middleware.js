@@ -1,5 +1,22 @@
 const jwt = require('jsonwebtoken');
 
+const auth = (req, res, next) => {
+  // look in Authorization header:
+  const authHeader = req.header('Authorization') || req.header('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No token, authorization denied' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded.user || decoded;  // depending on how you sign
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Token is not valid' });
+  }
+};
+
 const authorizeFrontdesk = (req, res, next) => {
   console.log('Frontdesk authorization middleware triggered');
 
@@ -39,4 +56,4 @@ const authorizeFrontdesk = (req, res, next) => {
   }
 };
 
-module.exports = { authorizeFrontdesk };
+module.exports = { auth, authorizeFrontdesk };
