@@ -42,7 +42,8 @@ async function getProfile(req, res) {
         first_name: true,
         last_name: true,
         phone: true,
-        role: true
+        role: true,
+        user_profiles: true
       }
     });
     if (!user) {
@@ -58,21 +59,56 @@ async function getProfile(req, res) {
 // Update current user profile
 async function updateProfile(req, res) {
   const userId = req.user.userId;
-  const { first_name, last_name, phone } = req.body;
+  const { first_name, last_name, phone, date_of_birth, gender, address, city, state, zip_code, country, profile_picture_url } = req.body;
+
   try {
-    const updated = await prisma.users.update({
+    // Update user's basic information
+    const updatedUser = await prisma.users.update({
       where: { user_id: userId },
       data: { first_name, last_name, phone },
+    });
+
+    // Update or create user profile
+    const updatedProfile = await prisma.user_profiles.upsert({
+      where: { user_id: userId },
+      update: {
+        date_of_birth: date_of_birth ? new Date(date_of_birth) : undefined,
+        gender,
+        address,
+        city,
+        state,
+        zip_code,
+        country,
+        profile_picture_url,
+      },
+      create: {
+        user_id: userId,
+        date_of_birth: date_of_birth ? new Date(date_of_birth) : undefined,
+        gender,
+        address,
+        city,
+        state,
+        zip_code,
+        country,
+        profile_picture_url,
+      },
+    });
+
+    // Fetch the complete user object with updated profile
+    const user = await prisma.users.findUnique({
+      where: { user_id: userId },
       select: {
         user_id: true,
         email: true,
         first_name: true,
         last_name: true,
         phone: true,
-        role: true
-      }
+        role: true,
+        user_profiles: true,
+      },
     });
-    return res.status(200).json({ message: 'Profile updated successfully', user: updated });
+
+    return res.status(200).json({ message: 'Profile updated successfully', user });
   } catch (err) {
     console.error('Profile update error:', err);
     return res.status(500).json({ message: 'Internal server error.' });

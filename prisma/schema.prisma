@@ -7,7 +7,138 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// Memberships model - represents different membership plans offered by gyms
+model activities {
+  activity_id    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String           @unique @db.VarChar(100)
+  description    String?
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  is_deleted     Boolean          @default(false)
+  events         events[]
+  gym_activities gym_activities[]
+}
+
+model admins {
+  admin_id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username      String   @unique @db.VarChar(100)
+  password_hash String
+  role          String   @db.VarChar(50)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  is_deleted    Boolean  @default(false)
+}
+
+model amenities {
+  amenity_id    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String          @unique @db.VarChar(100)
+  icon_url      String?
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  is_deleted    Boolean         @default(false)
+  gym_amenities gym_amenities[]
+}
+
+model event_bookings {
+  booking_id        String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id          String                  @db.Uuid
+  user_id           String                  @db.Uuid
+  booked_at         DateTime                @default(now()) @db.Timestamptz(6)
+  payment_id        String?                 @db.Uuid
+  attendance_status attendance_status_enum? @default(not_marked)
+  is_deleted        Boolean                 @default(false)
+  events            events                  @relation(fields: [event_id], references: [event_id], onDelete: Cascade, map: "fk_eb_event")
+  users             users                   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_eb_user")
+  payments          payments?               @relation(fields: [payment_id], references: [payment_id], map: "fk_eventbooking_payment")
+
+  @@index([event_id], map: "idx_bookings_event")
+}
+
+model events {
+  event_id       String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gym_id         String           @db.Uuid
+  activity_id    String           @db.Uuid
+  name           String           @db.VarChar(150)
+  description    String?
+  event_date     DateTime         @db.Timestamptz(6)
+  status         String           @default("upcoming") @db.VarChar(20)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  price_rupees   Int?
+  is_deleted     Boolean          @default(false)
+  event_bookings event_bookings[]
+  activities     activities       @relation(fields: [activity_id], references: [activity_id], onDelete: Cascade, map: "fk_events_activity")
+  gyms           gyms             @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_events_gym")
+  payments       payments[]
+
+  @@index([gym_id], map: "idx_events_gym")
+}
+
+model gym_activities {
+  gym_id      String     @db.Uuid
+  activity_id String     @db.Uuid
+  activities  activities @relation(fields: [activity_id], references: [activity_id], onDelete: Cascade, map: "fk_gyma_activity")
+  gyms        gyms       @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_gyma_gym")
+
+  @@id([gym_id, activity_id])
+  @@index([gym_id], map: "idx_gyma_gym")
+}
+
+model gym_amenities {
+  gym_id     String    @db.Uuid
+  amenity_id String    @db.Uuid
+  amenities  amenities @relation(fields: [amenity_id], references: [amenity_id], onDelete: Cascade, map: "fk_ga_amenity")
+  gyms       gyms      @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_ga_gym")
+
+  @@id([gym_id, amenity_id])
+  @@index([gym_id], map: "idx_ga_gym")
+}
+
+model gym_info {
+  info_id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gym_id          String   @db.Uuid
+  name            String   @db.VarChar(150)
+  address         String?
+  city            String?  @db.VarChar(100)
+  contact_number  String?  @db.VarChar(20)
+  opening_hours   String?  @db.VarChar(100)
+  latitude        Decimal? @db.Decimal(9, 6)
+  longitude       Decimal? @db.Decimal(9, 6)
+  google_maps_url String?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  is_deleted      Boolean  @default(false)
+  gyms            gyms     @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_gym_info_gym")
+}
+
+model gym_services {
+  gym_id     String   @db.Uuid
+  service_id String   @db.Uuid
+  gyms       gyms     @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_gs_gym")
+  services   services @relation(fields: [service_id], references: [service_id], onDelete: Cascade, map: "fk_gs_service")
+
+  @@id([gym_id, service_id])
+  @@index([gym_id], map: "idx_gs_gym")
+}
+
+model gym_types {
+  gym_type_id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(50)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  is_deleted  Boolean  @default(false)
+  gyms        gyms[]
+}
+
+model gyms {
+  gym_id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gym_type_id    String           @db.Uuid
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  is_deleted     Boolean          @default(false)
+  events         events[]
+  gym_activities gym_activities[]
+  gym_amenities  gym_amenities[]
+  gym_info       gym_info[]
+  gym_services   gym_services[]
+  gym_types      gym_types        @relation(fields: [gym_type_id], references: [gym_type_id], map: "fk_gym_type")
+  memberships    memberships[]
+  services       services[]
+  staff          staff[]
+}
+
 model memberships {
   membership_id    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   gym_id           String                 @db.Uuid
@@ -17,13 +148,12 @@ model memberships {
   price_rupees     Int
   status           membership_status_enum @default(active)
   created_at       DateTime               @default(now()) @db.Timestamptz(6)
-  is_deleted       Boolean                @default(false) // Added soft delete flag
-  gyms             gyms                   @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_membership_gym") // Changed to Cascade
+  is_deleted       Boolean                @default(false)
+  gyms             gyms                   @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_membership_gym")
   payments         payments[]
   user_memberships user_memberships[]
 }
 
-/// Payments model - tracks all financial transactions in the system
 model payments {
   payment_id                                            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id                                               String              @db.Uuid
@@ -38,19 +168,53 @@ model payments {
   user_trainer_id                                       String?             @db.Uuid
   service_id                                            String?             @db.Uuid
   event_id                                              String?             @db.Uuid
-  is_deleted                                            Boolean             @default(false) // Added soft delete flag
+  is_deleted                                            Boolean             @default(false)
   event_bookings                                        event_bookings[]
-  events                                                events?             @relation(fields: [event_id], references: [event_id], onUpdate: Cascade, map: "fk_pay_event") // Changed to Cascade
-  memberships                                           memberships?        @relation(fields: [membership_id], references: [membership_id], onUpdate: Cascade, map: "fk_pay_membership") // Changed to Cascade
-  services                                              services?           @relation(fields: [service_id], references: [service_id], onUpdate: Cascade, map: "fk_pay_service") // Changed to Cascade
-  users                                                 users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_pay_user") // Changed to Cascade
-  user_trainers_payments_user_trainer_idTouser_trainers user_trainers?      @relation("payments_user_trainer_idTouser_trainers", fields: [user_trainer_id], references: [user_trainer_id], onUpdate: Cascade, map: "fk_pay_user_trainer") // Changed to Cascade
-  staff                                                 staff?              @relation(fields: [staff_id], references: [staff_id], onUpdate: Cascade, map: "fk_payments_staff") // Changed to Cascade
+  events                                                events?             @relation(fields: [event_id], references: [event_id], map: "fk_pay_event")
+  memberships                                           memberships?        @relation(fields: [membership_id], references: [membership_id], map: "fk_pay_membership")
+  services                                              services?           @relation(fields: [service_id], references: [service_id], map: "fk_pay_service")
+  users                                                 users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_pay_user")
+  user_trainers_payments_user_trainer_idTouser_trainers user_trainers?      @relation("payments_user_trainer_idTouser_trainers", fields: [user_trainer_id], references: [user_trainer_id], map: "fk_pay_user_trainer")
+  staff                                                 staff?              @relation(fields: [staff_id], references: [staff_id], map: "fk_payments_staff")
   user_memberships                                      user_memberships[]
   user_trainers_user_trainers_payment_idTopayments      user_trainers[]     @relation("user_trainers_payment_idTopayments")
 }
 
-/// User Memberships model - tracks which users have which memberships
+model services {
+  service_id   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gym_id       String         @db.Uuid
+  name         String         @db.VarChar(100)
+  description  String?
+  price_rupees Int
+  created_at   DateTime       @default(now()) @db.Timestamptz(6)
+  is_deleted   Boolean        @default(false)
+  gym_services gym_services[]
+  payments     payments[]
+  gyms         gyms           @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_services_gym")
+
+  @@unique([gym_id, name])
+}
+
+model staff {
+  staff_id      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gym_id        String          @db.Uuid
+  name          String          @db.VarChar(100)
+  bio           String?
+  photo_url     String?
+  phone         String?         @db.VarChar(20)
+  email         String?         @db.VarChar(150)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  is_deleted    Boolean         @default(false)
+  user_id       String          @unique @db.Uuid
+  staff_type    staff_type_enum @default(basic_staff)
+  payments      payments[]
+  gyms          gyms            @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_staff_gym")
+  users         users           @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_staff_user")
+  user_trainers user_trainers[]
+
+  @@index([gym_id], map: "idx_staff_gym")
+}
+
 model user_memberships {
   user_membership_id String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id            String                 @db.Uuid
@@ -60,246 +224,72 @@ model user_memberships {
   payment_id         String?                @db.Uuid
   created_at         DateTime               @default(now()) @db.Timestamptz(6)
   status             membership_status_enum @default(tobestarted)
-  is_deleted         Boolean                @default(false) // Added soft delete flag
-  memberships        memberships            @relation(fields: [membership_id], references: [membership_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_um_membership") // Changed to Cascade
-  payments           payments?              @relation(fields: [payment_id], references: [payment_id], onUpdate: Cascade, map: "fk_um_payment") // Changed to Cascade
-  users              users                  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_um_user") // Changed to Cascade
+  is_deleted         Boolean                @default(false)
+  memberships        memberships            @relation(fields: [membership_id], references: [membership_id], onDelete: Cascade, map: "fk_um_membership")
+  payments           payments?              @relation(fields: [payment_id], references: [payment_id], map: "fk_um_payment")
+  users              users                  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_um_user")
 }
 
-/// User Profiles model - stores additional information about users
 model user_profiles {
-  profile_id       String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id          String       @unique @db.Uuid
-  date_of_birth    DateTime?    @db.Date
-  gender           gender_enum?
-  height_cm        Decimal?     @db.Decimal(5, 2)
-  weight_kg        Decimal?     @db.Decimal(5, 2)
-  food_preferences String[]     @default([])
-  lifestyle        Json?
-  created_at       DateTime     @default(now()) @db.Timestamptz(6)
-  is_deleted       Boolean      @default(false) // Added soft delete flag
-  users            users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_profile_user") // Changed to Cascade
+  profile_id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String       @unique @db.Uuid
+  date_of_birth       DateTime?    @db.Date
+  gender              gender_enum?
+  address             String?      @db.VarChar(255)
+  city                String?      @db.VarChar(100)
+  state               String?      @db.VarChar(100)
+  zip_code            String?      @db.VarChar(20)
+  country             String?      @db.VarChar(100)
+  profile_picture_url String?      @db.VarChar(500)
+  height_cm           Decimal?     @db.Decimal(5, 2)
+  weight_kg           Decimal?     @db.Decimal(5, 2)
+  food_preferences    String[]     @default([])
+  lifestyle           Json?
+  created_at          DateTime     @default(now()) @db.Timestamptz(6)
+  is_deleted          Boolean      @default(false)
+  users               users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_profile_user")
 }
 
-/// Users model - represents all system users including gym members
-/// This table contains check constraints and requires additional setup for migrations. 
-/// Visit https://pris.ly/d/check-constraints for more info.
+model user_trainers {
+  user_trainer_id                                  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                                          String                 @db.Uuid
+  trainer_id                                       String                 @db.Uuid
+  payment_id                                       String?                @db.Uuid
+  rate_cents                                       Int
+  start_date                                       DateTime?              @db.Date
+  end_date                                         DateTime?              @db.Date
+  status                                           membership_status_enum @default(active)
+  created_at                                       DateTime               @default(now()) @db.Timestamptz(6)
+  is_deleted                                       Boolean                @default(false)
+  payments_payments_user_trainer_idTouser_trainers payments[]             @relation("payments_user_trainer_idTouser_trainers")
+  payments_user_trainers_payment_idTopayments      payments?              @relation("user_trainers_payment_idTopayments", fields: [payment_id], references: [payment_id], map: "fk_ut_payment")
+  staff                                            staff                  @relation(fields: [trainer_id], references: [staff_id], onDelete: Cascade, map: "fk_ut_trainer")
+  users                                            users                  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_ut_user")
+}
+
 model users {
   user_id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email            String             @unique @db.VarChar(255) /// @validate.email
+  email            String             @unique @db.VarChar(255)
   password_hash    String
   first_name       String?            @db.VarChar(100)
   last_name        String?            @db.VarChar(100)
-  phone            String?            @db.VarChar(20) /// @validate.format("^[0-9+\\-\\s]+$")
+  phone            String?            @db.VarChar(20)
   role             String             @default("member") @db.VarChar(50)
   created_at       DateTime           @default(now()) @db.Timestamptz(6)
   updated_at       DateTime           @default(now()) @db.Timestamptz(6)
   is_deleted       Boolean            @default(false)
   event_bookings   event_bookings[]
   payments         payments[]
+  staff            staff?
   user_memberships user_memberships[]
   user_profiles    user_profiles?
   user_trainers    user_trainers[]
-  staff            staff?             @relation("UserStaff") // Added relation to staff table
 }
 
-/// Gym Types model - categorizes gyms by type (e.g., fitness center, yoga studio)
-model gym_types {
-  gym_type_id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String   @unique @db.VarChar(50)
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
-  is_deleted  Boolean  @default(false) // Added soft delete flag
-  gyms        gyms[]
-}
-
-/// Gym Info model - stores detailed information about each gym
-model gym_info {
-  info_id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gym_id          String   @db.Uuid
-  name            String   @db.VarChar(150)
-  address         String?
-  city            String?  @db.VarChar(100)
-  contact_number  String?  @db.VarChar(20) /// @validate.format("^[0-9+\\-\\s]+$")
-  opening_hours   String?  @db.VarChar(100)
-  latitude        Decimal? @db.Decimal(9, 6)
-  longitude       Decimal? @db.Decimal(9, 6)
-  google_maps_url String?
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  is_deleted      Boolean  @default(false)
-  gyms            gyms     @relation("GymToInfo", fields: [gym_id], references: [gym_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_gym_info_gym") // Changed to Cascade
-}
-
-/// Gyms model - central entity representing fitness centers
-model gyms {
-  gym_id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gym_type_id    String           @db.Uuid
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  is_deleted     Boolean          @default(false) // Added soft delete flag
-  events         events[]
-  gym_activities gym_activities[]
-  gym_amenities  gym_amenities[]
-  gym_info       gym_info[]       @relation("GymToInfo")
-  gym_services   gym_services[]
-  gym_types      gym_types        @relation(fields: [gym_type_id], references: [gym_type_id], onUpdate: Cascade, map: "fk_gym_type") // Changed to Cascade
-  memberships    memberships[]
-  services       services[]
-  staff          staff[]
-}
-
-/// Activities model - represents different fitness activities offered
-model activities {
-  activity_id    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name           String           @unique @db.VarChar(100)
-  description    String?
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  is_deleted     Boolean          @default(false) // Added soft delete flag
-  events         events[]
-  gym_activities gym_activities[]
-}
-
-/// Admins model - represents system administrators
-model admins {
-  admin_id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username      String   @unique @db.VarChar(100)
-  password_hash String
-  role          String   @db.VarChar(50)
-  created_at    DateTime @default(now()) @db.Timestamptz(6)
-  is_deleted    Boolean  @default(false) // Added soft delete flag
-}
-
-/// Amenities model - represents facilities available at gyms
-model amenities {
-  amenity_id    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          String          @unique @db.VarChar(100)
-  icon_url      String?
-  created_at    DateTime        @default(now()) @db.Timestamptz(6)
-  is_deleted    Boolean         @default(false) // Added soft delete flag
-  gym_amenities gym_amenities[]
-}
-
-/// Event Bookings model - tracks user registrations for events
-model event_bookings {
-  booking_id        String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  event_id          String                  @db.Uuid
-  user_id           String                  @db.Uuid
-  booked_at         DateTime                @default(now()) @db.Timestamptz(6)
-  payment_id        String?                 @db.Uuid
-  attendance_status attendance_status_enum? @default(not_marked)
-  is_deleted        Boolean                 @default(false) // Added soft delete flag
-  events            events                  @relation(fields: [event_id], references: [event_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_eb_event") // Changed to Cascade
-  users             users                   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_eb_user") // Changed to Cascade
-  payments          payments?               @relation(fields: [payment_id], references: [payment_id], onUpdate: Cascade, map: "fk_eventbooking_payment") // Changed to Cascade
-
-  @@index([event_id], map: "idx_bookings_event")
-}
-
-/// Events model - represents classes, workshops and other scheduled activities
-model events {
-  event_id       String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gym_id         String           @db.Uuid
-  activity_id    String           @db.Uuid
-  name           String           @db.VarChar(150)
-  description    String?
-  event_date     DateTime         @db.Timestamptz(6)
-  status         String           @default("upcoming") @db.VarChar(20)
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  price_rupees   Int?
-  is_deleted     Boolean          @default(false) // Added soft delete flag
-  event_bookings event_bookings[]
-  activities     activities       @relation(fields: [activity_id], references: [activity_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_events_activity") // Changed to Cascade
-  gyms           gyms             @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_events_gym") // Changed to Cascade
-  payments       payments[]
-
-  @@index([gym_id], map: "idx_events_gym")
-}
-
-/// Gym Activities model - junction table linking gyms to activities they offer
-model gym_activities {
-  gym_id      String     @db.Uuid
-  activity_id String     @db.Uuid
-  activities  activities @relation(fields: [activity_id], references: [activity_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_gyma_activity") // Changed to Cascade
-  gyms        gyms       @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_gyma_gym") // Changed to Cascade
-
-  @@id([gym_id, activity_id])
-  @@index([gym_id], map: "idx_gyma_gym")
-}
-
-/// Gym Amenities model - junction table linking gyms to amenities they offer
-model gym_amenities {
-  gym_id     String    @db.Uuid
-  amenity_id String    @db.Uuid
-  amenities  amenities @relation(fields: [amenity_id], references: [amenity_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_ga_amenity") // Changed to Cascade
-  gyms       gyms      @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_ga_gym") // Changed to Cascade
-
-  @@id([gym_id, amenity_id])
-  @@index([gym_id], map: "idx_ga_gym")
-}
-
-/// Gym Services model - junction table linking gyms to services they offer
-model gym_services {
-  gym_id     String   @db.Uuid
-  service_id String   @db.Uuid
-  gyms       gyms     @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_gs_gym") // Changed to Cascade
-  services   services @relation(fields: [service_id], references: [service_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_gs_service") // Changed to Cascade
-
-  @@id([gym_id, service_id])
-  @@index([gym_id], map: "idx_gs_gym")
-}
-
-/// Services model - represents additional services offered by gyms
-model services {
-  service_id   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gym_id       String         @db.Uuid
-  name         String         @db.VarChar(100)
-  description  String?
-  price_rupees Int
-  created_at   DateTime       @default(now()) @db.Timestamptz(6)
-  is_deleted   Boolean        @default(false) // Added soft delete flag
-  gym_services gym_services[]
-  payments     payments[]
-  gyms         gyms           @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_services_gym") // Changed to Cascade
-
-  @@unique([gym_id, name]) // Ensure service names are unique within a gym
-}
-
-/// Staff model - represents employees at gyms including trainers
-model staff {
-  staff_id      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id       String          @unique @db.Uuid // Added user_id for linking to users table
-  gym_id        String          @db.Uuid
-  name          String          @db.VarChar(100)
-  staff_type    staff_type_enum @default(basic_staff)
-  bio           String?
-  photo_url     String?
-  phone         String?         @db.VarChar(20) /// @validate.format("^[0-9+\\-\\s]+$")
-  email         String?         @db.VarChar(150) /// @validate.email
-  created_at    DateTime        @default(now()) @db.Timestamptz(6)
-  is_deleted    Boolean         @default(false) // Added soft delete flag
-  payments      payments[]
-  gyms          gyms            @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_staff_gym") // Changed to Cascade
-  users         users           @relation(name: "UserStaff", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_staff_user") // Added relation to users table
-  user_trainers user_trainers[]
-
-  @@index([gym_id], map: "idx_staff_gym")
-}
-
-
-/// User Trainers model - tracks personal training relationships between users and staff
-model user_trainers {
-  user_trainer_id  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id          String                 @db.Uuid
-  trainer_id       String                 @db.Uuid
-  payment_id       String?                @db.Uuid // Made optional to fix circular dependency
-  rate_cents       Int
-  start_date       DateTime?              @db.Date
-  end_date         DateTime?              @db.Date
-  status           membership_status_enum @default(active)
-  created_at       DateTime               @default(now()) @db.Timestamptz(6)
-  is_deleted       Boolean                @default(false) // Added soft delete flag
-  related_payments payments[]             @relation("payments_user_trainer_idTouser_trainers")
-  payment          payments?              @relation("user_trainers_payment_idTopayments", fields: [payment_id], references: [payment_id], onDelete: SetNull, onUpdate: Cascade, map: "fk_ut_payment") // Changed onDelete to SetNull and onUpdate to Cascade
-  staff            staff                  @relation(fields: [trainer_id], references: [staff_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_ut_trainer") // Changed to Cascade
-  users            users                  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade, map: "fk_ut_user") // Changed to Cascade
+enum attendance_status_enum {
+  not_marked
+  attended
+  missed
 }
 
 enum gender_enum {
@@ -318,19 +308,6 @@ enum membership_status_enum {
   tobestarted
 }
 
-enum payment_status_enum {
-  success
-  pending
-  failed
-  refunded
-}
-
-enum attendance_status_enum {
-  not_marked
-  attended
-  missed
-}
-
 enum payment_for_enum {
   membership
   personal_training
@@ -339,8 +316,16 @@ enum payment_for_enum {
   other
 }
 
+enum payment_status_enum {
+  success
+  pending
+  failed
+  refunded
+}
+
 enum staff_type_enum {
   manager
   housekeeping
   basic_staff
+  trainer
 }
