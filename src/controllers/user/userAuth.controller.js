@@ -13,7 +13,12 @@ async function login(req, res) {
     return res.status(400).json({ message: 'Email and password are required.' });
 
   try {
-    const user = await prisma.users.findUnique({ where: { email } });
+    const user = await prisma.users.findUnique({
+      where: { email },
+      include: {
+        user_profiles: true,
+      },
+    });
     if (!user)
       return res.status(401).json({ message: 'Invalid credentials.' });
 
@@ -27,7 +32,7 @@ async function login(req, res) {
       { expiresIn: '1d' }
     );
 
-    res.status(200).json({ message: 'Login successful', token });
+    res.status(200).json({ message: 'Login successful', token, user });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Internal server error' });
