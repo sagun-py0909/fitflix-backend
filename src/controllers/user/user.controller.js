@@ -140,6 +140,7 @@ async function getGyms(req, res) {
       const info = g.gym_info[0] || {};
       return {
         gym_id: g.gym_id,
+        name: info.name || null,
         gym_type_id: g.gym_type_id,
         created_at: g.created_at,
         address: info.address || null,
