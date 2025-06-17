@@ -124,6 +124,7 @@ async function getGyms(req, res) {
         gym_info: {
           where: { is_deleted: false },
           select: {
+            name: true,
             address: true,
             city: true,
             contact_number: true,
