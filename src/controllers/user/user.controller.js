@@ -116,47 +116,26 @@ async function updateProfile(req, res) {
 }
 
 // List all gyms (non-deleted), flattening gym_info
+// List all gyms (non-deleted) with gym_info and gym_type included
 async function getGyms(req, res) {
   try {
     const gyms = await prisma.gyms.findMany({
       where: { is_deleted: false },
       include: {
         gym_info: {
-          where: { is_deleted: false },
-          select: {
-            name: true,
-            address: true,
-            city: true,
-            contact_number: true,
-            opening_hours: true,
-            google_maps_url: true
-          }
-        }
+          where: { is_deleted: false }
+        },
+        gym_types: true
       }
     });
 
-    // Flatten the first gym_info record into the gym object
-    const result = gyms.map(g => {
-      const info = g.gym_info[0] || {};
-      return {
-        gym_id: g.gym_id,
-        name: info.name || null,
-        gym_type_id: g.gym_type_id,
-        created_at: g.created_at,
-        address: info.address || null,
-        city: info.city || null,
-        contact_number: info.contact_number || null,
-        opening_hours: info.opening_hours || null,
-        google_maps_url: info.google_maps_url || null
-      };
-    });
-
-    return res.status(200).json(result);
+    return res.status(200).json(gyms);
   } catch (err) {
     console.error('Gyms error:', err);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 }
+
 
 // List active, non-deleted memberships for a given gym
 async function getMemberships(req, res) {
