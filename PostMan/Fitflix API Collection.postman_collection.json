@@ -1,583 +1,88 @@
 {
-	"info": {
-		"_postman_id": "47d12117-57f2-4450-ab9a-1827f93586d3",
-		"name": "Fitflix API Collection",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
-		"_exporter_id": "31813752"
-	},
-	"item": [
-		{
-			"name": "Staff Management",
-			"item": [
-				{
-					"name": "Create Staff",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer <your_jwt_token>",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"user_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"staff_type\": \"frontdesk\",\n  \"gym_id\": \"660e8400-e29b-41d4-a716-446655440000\"\n}"
-						},
-						"url": "http://localhost:3000/api/admin/staff"
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Staff",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer <your_jwt_token>",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": "http://localhost:3000/api/admin/staff"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Staff By ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer <your_jwt_token>",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "http://localhost:3000/api/admin/staff/:staffId",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "3000",
-							"path": [
-								"api",
-								"admin",
-								"staff",
-								":staffId"
-							],
-							"variable": [
-								{
-									"key": "staffId"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Staff",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer <your_jwt_token>",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "http://localhost:3000/api/admin/staff/:staffId",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "3000",
-							"path": [
-								"api",
-								"admin",
-								"staff",
-								":staffId"
-							],
-							"variable": [
-								{
-									"key": "staffId"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Staff",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer <your_jwt_token>",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "http://localhost:3000/api/admin/staff/:staffId",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "3000",
-							"path": [
-								"api",
-								"admin",
-								"staff",
-								":staffId"
-							],
-							"variable": [
-								{
-									"key": "staffId"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Analytics-Prod",
-			"item": [
-				{
-					"name": "Get Total Users",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer <your_jwt_token>",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": "{{BaseUrl}}/admin/analytics/total-users"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Total Revenue",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer <your_jwt_token>",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": "{{BaseUrl}}/admin/analytics/total-revenue"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Total Check-ins",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer <your_jwt_token>",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": "{{BaseUrl}}/admin/analytics/total-checkins"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "AdminRoutes-Prod",
-			"item": [
-				{
-					"name": "Gym Management",
-					"item": [
-						{
-							"name": "Create Gym",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"const response = pm.response.json();\r",
-											"pm.environment.set(\"gymId\", response.gym_id);\r",
-											""
-										],
-										"type": "text/javascript",
-										"packages": {}
-									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"name\": \"Fitflix Uptown\",\n  \"address\": \"456 Park Avenue, Hyderabad, India\",\n  \"phone_number\": \"+91-9876543223\",\n  \"open_time\": \"2025-06-01T05:30:00Z\",\n  \"close_time\": \"2025-06-01T21:30:00Z\",\n  \"gym_type_id\": \"cc884a96-6325-4b07-aeec-227f707c801d\"\n}\n"
-								},
-								"url": "{{BaseUrl}}/admin/gyms"
-							},
-							"response": []
-						},
-						{
-							"name": "Get All Gyms",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": "{{BaseUrl}}/admin/gyms"
-							},
-							"response": []
-						},
-						{
-							"name": "Get Gym By ID",
-							"event": [
-								{
-									"listen": "prerequest",
-									"script": {
-										"exec": [
-											"const gymId = pm.environment.get(\"gymId\");\r",
-											"console.log(\"Gym ID:\", gymId);\r",
-											""
-										],
-										"type": "text/javascript",
-										"packages": {}
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": "{{BaseUrl}}/admin/gyms/{{gymId}}"
-							},
-							"response": []
-						},
-						{
-							"name": "Update Gym",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"name\": \"Fitflix Elite Center\",\r\n    \"address\": \"789 Premium Rd, Hyderabad, India\",\r\n    \"city\": \"Hyderabad\",\r\n    \"phone_number\": \"+91-9876543299\",\r\n    \"open_time\": \"06:00 AM\",\r\n    \"close_time\": \"10:00 PM\",\r\n    \"latitude\": 17.385044,\r\n    \"longitude\": 78.486671,\r\n    \"google_maps_url\": \"https://maps.google.com/?q=17.385044,78.486671\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{BaseUrl}}/admin/gyms/:gymId",
-									"host": [
-										"{{BaseUrl}}"
-									],
-									"path": [
-										"admin",
-										"gyms",
-										":gymId"
-									],
-									"variable": [
-										{
-											"key": "gymId",
-											"value": "{{gymId}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Delete Gym",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": "http://localhost:3000/api/admin/gyms/{{gymId}}"
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Gym Types",
-					"item": [
-						{
-							"name": "Create Gym Type",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"const response = pm.response.json();\r",
-											"pm.environment.set(\"gymTypeId\", response.gym_type_id);\r",
-											""
-										],
-										"type": "text/javascript",
-										"packages": {}
-									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"name\": \"premium\"\n}"
-								},
-								"url": "{{BaseUrl}}/admin/gym-types"
-							},
-							"response": []
-						},
-						{
-							"name": "Get All Gym Types",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": "{{BaseUrl}}/admin/gym-types"
-							},
-							"response": []
-						},
-						{
-							"name": "Get Gym Type By ID",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "http://localhost:3000/api/admin/gym-types/:typeId",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "3000",
-									"path": [
-										"api",
-										"admin",
-										"gym-types",
-										":typeId"
-									],
-									"variable": [
-										{
-											"key": "typeId",
-											"value": "{{gymTypeId}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Gym Type",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"name\": \"Standard\"\n}"
-								},
-								"url": {
-									"raw": "{{BaseUrl}}/admin/gym-types/:typeId",
-									"host": [
-										"{{BaseUrl}}"
-									],
-									"path": [
-										"admin",
-										"gym-types",
-										":typeId"
-									],
-									"variable": [
-										{
-											"key": "typeId",
-											"value": "{{gymTypeId}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Delete Gym Type",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer <your_jwt_token>",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "{{BaseUrl}}/admin/gym-types/:typeId",
-									"host": [
-										"{{BaseUrl}}"
-									],
-									"path": [
-										"admin",
-										"gym-types",
-										":typeId"
-									],
-									"variable": [
-										{
-											"key": "typeId",
-											"value": "{{gymTypeId}}"
-										}
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				}
-			]
-		}
-	]
+  "info": {
+    "name": "Fitflix Gym Media",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "gymId", "value": "123" }
+  ],
+  "item": [
+    {
+      "name": "Upload Photos & Videos",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "multipart/form-data" }],
+        "url": {
+          "raw": "{{base_url}}/gyms/{{gymId}}/media",
+          "host": ["{{base_url}}"],
+          "path": ["gyms", "{{gymId}}", "media"]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "type",
+              "value": "photos",
+              "type": "text"
+            },
+            {
+              "key": "media",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "media",
+              "type": "file",
+              "src": []
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Photos",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/gyms/{{gymId}}/media?type=photos",
+          "host": ["{{base_url}}"],
+          "path": ["gyms", "{{gymId}}", "media"],
+          "query": [{ "key": "type", "value": "photos" }]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Videos",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/gyms/{{gymId}}/media?type=videos",
+          "host": ["{{base_url}}"],
+          "path": ["gyms", "{{gymId}}", "media"],
+          "query": [{ "key": "type", "value": "videos" }]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Media",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/gyms/{{gymId}}/media",
+          "host": ["{{base_url}}"],
+          "path": ["gyms", "{{gymId}}", "media"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"key\": \"gym_123/photos/1612345678_sample.jpg\"\n}"
+        }
+      },
+      "response": []
+    }
+  ]
 }

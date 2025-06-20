@@ -1,5 +1,11 @@
+//gymManagement Controller
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const {
+  uploadGymMedia,
+  listGymMedia,
+  deleteGymMedia,
+} = require('../../utils/aws.upload');
 
 // Create a new gym with detailed info
 const createGym = async (req, res) => {
@@ -165,7 +171,7 @@ const updateGym = async (req, res) => {
   }
 };
 
-// Get gyms nearby (simple range search)
+
 
 
 
@@ -243,6 +249,72 @@ const getGymsNearby = async (req, res) => {
   }
 };
 
+const uploadMediaHandler = async (req, res) => {
+  const { gymId } = req.params;
+  const files = req.files; // populated by multer
+
+  if (!files || files.length === 0) {
+    return res.status(400).json({ error: 'No files were uploaded.' });
+  }
+
+  try {
+    const results = await Promise.all(
+      files.map(file => {
+        // decide folder by mimetype
+        const folder = file.mimetype.startsWith('image/')
+          ? 'photos'
+          : file.mimetype.startsWith('video/')
+            ? 'videos'
+            : null;
+
+        if (!folder) {
+          throw new Error(`Unsupported file type: ${file.mimetype}`);
+        }
+
+        return uploadGymMedia(
+          gymId,
+          file.buffer,          // from multer.memoryStorage
+          file.originalname,    // preserve name + extension
+          folder,
+          'public-read'
+        );
+      })
+    );
+
+    res.json({ uploaded: results });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// GET /gyms/:gymId/media?type=photos
+const listMediaHandler = async (req, res) => {
+  try {
+    const { gymId } = req.params;
+    const { type } = req.query;
+    const items = await listGymMedia(gymId, type);
+    res.json(items);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// DELETE /gyms/:gymId/media
+// body: { key: 'gym_123/photos/1612345678_img.jpg' }
+const deleteMediaHandler = async (req, res) => {
+  try {
+    const { key } = req.body;
+    await deleteGymMedia(key);
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   createGym,
   getAllGyms,
@@ -251,4 +323,7 @@ module.exports = {
   deleteGym,
   getGymsByType,
   getGymsNearby,
+  uploadMediaHandler,
+  listMediaHandler,
+  deleteMediaHandler,
 };
