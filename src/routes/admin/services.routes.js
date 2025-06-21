@@ -1,11 +1,12 @@
+// routes/services.routes.js
 const express = require('express');
 const router = express.Router();
+const ctrl = require('../../controllers/admin/service.controller');
 
-// Service Management Routes
-router.get('/', (req, res) => { res.send('Admin: Get all services'); });
-router.get('/:id', (req, res) => { res.send(`Admin: Get service ${req.params.id}`); });
-router.post('/', (req, res) => { res.send('Admin: Create new service'); });
-router.put('/:id', (req, res) => { res.send(`Admin: Update service ${req.params.id}`); });
-router.delete('/:id', (req, res) => { res.send(`Admin: Delete service ${req.params.id}`); });
+router.get('/',   ctrl.listServices);
+router.get('/:id',ctrl.getService);
+router.post('/',  ctrl.createService);
+router.put('/:id',ctrl.updateService);
+router.delete('/:id', ctrl.deleteService);
 
 module.exports = router;

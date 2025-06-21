@@ -1,113 +1,89 @@
+// controllers/services.controller.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all services (non-deleted), optionally filter by gym_id
-async function getAllServices(req, res) {
+// GET /services
+async function listServices(req, res) {
   try {
-    const { gym_id } = req.query;
-    const where = { is_deleted: false };
-    if (gym_id) where.gym_id = gym_id;
-
-    const services = await prisma.services.findMany({
-      where,
-      include: {
-        gyms: true // Include gym details if needed
-      }
+    const items = await prisma.services.findMany({
+      where: { is_deleted: false }
     });
-    return res.status(200).json(services);
-  } catch (error) {
-    console.error('Error fetching services:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
+    res.json(items);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch services.' });
   }
 }
 
-// Get a single service by ID
-async function getServiceById(req, res) {
+// GET /services/:id
+async function getService(req, res) {
+  const { id } = req.params;
   try {
-    const { id } = req.params;
-    const service = await prisma.services.findFirst({
-      where: { service_id: id, is_deleted: false },
-      include: { gyms: true }
+    const item = await prisma.services.findFirst({
+      where: { service_id: id, is_deleted: false }
     });
-
-    if (!service) {
-      return res.status(404).json({ message: 'Service not found.' });
-    }
-    return res.status(200).json(service);
-  } catch (error) {
-    console.error('Error fetching service:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
+    if (!item) return res.status(404).json({ error: 'Service not found.' });
+    res.json(item);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch service.' });
   }
 }
 
-// Create a new service
+// POST /services
 async function createService(req, res) {
+  const { gym_id, name, description, price_rupees } = req.body;
+  if (!gym_id || !name || price_rupees == null) {
+    return res.status(400).json({ error: 'gym_id, name and price_rupees are required.' });
+  }
   try {
-    const { gym_id, name, description, price_rupees } = req.body;
-    const newService = await prisma.services.create({
-      data: {
-        gym_id,
-        name,
-        description,
-        price_rupees
-      }
+    const created = await prisma.services.create({
+      data: { gym_id, name, description: description || null, price_rupees }
     });
-    return res.status(201).json(newService);
-  } catch (error) {
-    console.error('Error creating service:', error);
-    return res.status(400).json({ message: 'Could not create service.', details: error.message });
+    res.status(201).json(created);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Failed to create service.', details: err.message });
   }
 }
 
-// Update an existing service
+// PUT /services/:id
 async function updateService(req, res) {
+  const { id } = req.params;
+  const { name, description, price_rupees } = req.body;
   try {
-    const { id } = req.params;
-    const { name, description, price_rupees, is_deleted } = req.body;
-    const existing = await prisma.services.findUnique({ where: { service_id: id } });
-    if (!existing) {
-      return res.status(404).json({ message: 'Service not found.' });
-    }
-
-    const updatedService = await prisma.services.update({
-      where: { service_id: id },
-      data: {
-        name,
-        description,
-        price_rupees,
-        ...(typeof is_deleted === 'boolean' ? { is_deleted } : {})
-      }
+    const updated = await prisma.services.updateMany({
+      where: { service_id: id, is_deleted: false },
+      data: { name, description, price_rupees }
     });
-    return res.status(200).json(updatedService);
-  } catch (error) {
-    console.error('Error updating service:', error);
-    return res.status(400).json({ message: 'Could not update service.', details: error.message });
+    if (updated.count === 0) return res.status(404).json({ error: 'Service not found.' });
+    const item = await prisma.services.findUnique({ where: { service_id: id } });
+    res.json(item);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Failed to update service.', details: err.message });
   }
 }
 
-// Soft delete a service
+// DELETE /services/:id (soft delete)
 async function deleteService(req, res) {
+  const { id } = req.params;
   try {
-    const { id } = req.params;
-    const existing = await prisma.services.findUnique({ where: { service_id: id } });
-    if (!existing) {
-      return res.status(404).json({ message: 'Service not found.' });
-    }
-
-    await prisma.services.update({
-      where: { service_id: id },
+    const updated = await prisma.services.updateMany({
+      where: { service_id: id, is_deleted: false },
       data: { is_deleted: true }
     });
-    return res.status(200).json({ message: 'Service deleted successfully.' });
-  } catch (error) {
-    console.error('Error deleting service:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
+    if (updated.count === 0) return res.status(404).json({ error: 'Service not found.' });
+    res.json({ message: 'Service deleted.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete service.' });
   }
 }
 
 module.exports = {
-  getAllServices,
-  getServiceById,
+  listServices,
+  getService,
   createService,
   updateService,
   deleteService

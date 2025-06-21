@@ -11,6 +11,7 @@ const staffRoutes = require('./staff.routes');
 const analyticsRoutes = require('./analytics.routes');
 const dashboardRoutes = require('./dashboard.routes');
 const gymTypesRoutes = require('./gymTypes.routes');
+const amenitiesRoutes = require('./amenities.routes');
 
 router.use('/users', usersRoutes);
 router.use('/gym-types', gymTypesRoutes);
@@ -19,6 +20,7 @@ router.use('/memberships', membershipsRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/events', eventsRoutes);
 router.use('/services', servicesRoutes);
+router.use('/amenities', amenitiesRoutes);
 router.use('/staff', staffRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/dashboard', dashboardRoutes);
