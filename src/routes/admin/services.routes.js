@@ -8,5 +8,6 @@ router.get('/:id',ctrl.getService);
 router.post('/',  ctrl.createService);
 router.put('/:id',ctrl.updateService);
 router.delete('/:id', ctrl.deleteService);
+router.get('/gym/:gymId', ctrl.getServicesByGym);
 
 module.exports = router;

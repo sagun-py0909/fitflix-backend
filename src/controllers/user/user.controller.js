@@ -2,6 +2,7 @@
 const { PrismaClient } = require('@prisma/client');
 // const bcrypt = require('bcryptjs');
 const hash = require('../../middlewares/bcrypt.middleware.js');
+const { listGymMedia } = require('../../utils/aws.upload.js'); // Assuming you have this utility for AWS S3 uploads
 const prisma = new PrismaClient();
 
 // Register a new user
@@ -137,6 +138,80 @@ async function getGyms(req, res) {
 }
 
 
+async function getGymById(req, res) {
+  const { gymId } = req.params;
+
+  try {
+    // 1) Fetch gym + all relations
+    const gym = await prisma.gyms.findUnique({
+      where: { gym_id: gymId },
+      include: {
+        gym_info: true,
+        gym_types: true,
+        gym_amenities: { include: { amenities: true } },
+        gym_services: { include: { services: true } },
+        memberships: true,
+        gym_activities: { include: { activities: true } },
+        staff: true,
+        events: true,
+      }
+    });
+
+    if (!gym) {
+      return res.status(404).json({ message: 'Gym not found.' });
+    }
+
+    // 2) Filter & reshape
+    const info       = gym.gym_info.filter(i => !i.is_deleted);
+    const type       = gym.gym_types; // no deleted flag on types
+    const amenities  = gym.gym_amenities
+                           .map(x => x.amenities)
+                           .filter(a => !a.is_deleted);
+    const services   = gym.gym_services
+                           .map(x => x.services)
+                           .filter(s => !s.is_deleted);
+    const memberships= gym.memberships
+                           .filter(m => !m.is_deleted && m.status === 'active')
+                           .map(({ membership_id, name, description, duration_days, price_rupees }) => 
+                             ({ membership_id, name, description, duration_days, price_rupees })
+                           );
+    const activities = gym.gym_activities
+                           .map(x => x.activities)
+                           .filter(a => !a.is_deleted);
+    const staff      = gym.staff.filter(s => !s.is_deleted);
+    const events     = gym.events.filter(e => !e.is_deleted);
+
+    // 3) Fetch AWS media
+    const photos = await listGymMedia(gymId, 'photos');
+    const videos = await listGymMedia(gymId, 'videos');
+
+    // 4) Build final payload
+    const result = {
+      gym_id: gym.gym_id,
+      created_at: gym.created_at,
+      is_deleted: gym.is_deleted,
+
+      gym_info:        info,
+      gym_type:        type,
+      amenities,
+      services,
+      memberships,
+      activities,
+      staff,
+      events,
+
+      media: { photos, videos }
+    };
+
+    return res.json(result);
+  }
+  catch (err) {
+    console.error('Error fetching gym by ID:', err);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
+
 // List active, non-deleted memberships for a given gym
 async function getMemberships(req, res) {
   const { gymId } = req.params;
@@ -163,10 +238,12 @@ async function getMemberships(req, res) {
   }
 }
 
+
 module.exports = {
   registerUser,
   getProfile,
   updateProfile,
   getGyms,
+  getGymById,
   getMemberships
 };

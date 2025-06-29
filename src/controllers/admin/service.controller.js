@@ -1,4 +1,3 @@
-// controllers/services.controller.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -32,15 +31,27 @@ async function getService(req, res) {
 
 // POST /services
 async function createService(req, res) {
-  const { gym_id, name, description, price_rupees } = req.body;
-  if (!gym_id || !name || price_rupees == null) {
-    return res.status(400).json({ error: 'gym_id, name and price_rupees are required.' });
+  const { name, description, price_rupees , gym_id } = req.body;
+  if (!name || price_rupees == null) {
+    return res.status(400).json({ error: 'name and price_rupees are required.' });
   }
   try {
-    const created = await prisma.services.create({
-      data: { gym_id, name, description: description || null, price_rupees }
+    const createdService = await prisma.services.create({
+      data: { name, description: description || null, price_rupees }
     });
-    res.status(201).json(created);
+
+    // Add relation in gym_services
+    if (gym_id){
+      await prisma.gym_services.create({
+      data: {
+        gym_id,
+        service_id: createdService.service_id
+      }
+    });
+    }
+    
+
+    res.status(201).json(createdService);
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: 'Failed to create service.', details: err.message });
@@ -81,10 +92,37 @@ async function deleteService(req, res) {
   }
 }
 
+// GET services offered by a specific gym
+async function getServicesByGym(req, res) {
+  const { gymId } = req.params;
+  try {
+    const gymServiceLinks = await prisma.gym_services.findMany({
+      where: { gym_id: gymId },
+    });
+    if (gymServiceLinks.length === 0) {
+      return res.status(404).json({ error: 'No services found for this gym.' });
+    }
+
+    const services = await prisma.services.findMany({
+      where: {
+        service_id: {
+          in: gymServiceLinks.map(link => link.service_id)
+        },
+        is_deleted: false
+      }
+    });
+    res.json(services);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch services for gym.' });
+  }
+}
+
 module.exports = {
   listServices,
   getService,
   createService,
   updateService,
-  deleteService
+  deleteService,
+  getServicesByGym
 };

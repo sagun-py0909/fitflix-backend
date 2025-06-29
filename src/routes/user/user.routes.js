@@ -6,6 +6,7 @@ const {
   getProfile,
   updateProfile,
   getGyms,
+  getGymById,
   getMemberships
 } = require('../../controllers/user/user.controller.js');
 const { auth } = require('../../middlewares/auth.middleware.js'); // your JWT verify middleware
@@ -16,6 +17,7 @@ router.get('/profile', auth, getProfile);
 router.put('/profile', auth, updateProfile);
 // Public
 router.get('/gyms', getGyms);
+router.get('/gyms/:gymId', getGymById);
 router.get('/memberships/:gymId', getMemberships);
 
 module.exports = router;

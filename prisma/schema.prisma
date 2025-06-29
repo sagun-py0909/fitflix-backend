@@ -132,10 +132,9 @@ model gyms {
   gym_activities gym_activities[]
   gym_amenities  gym_amenities[]
   gym_info       gym_info[]
-  gym_services   gym_services[]
   gym_types      gym_types        @relation(fields: [gym_type_id], references: [gym_type_id], map: "fk_gym_type")
   memberships    memberships[]
-  services       services[]
+  gym_services   gym_services[]
   staff          staff[]
 }
 
@@ -182,7 +181,6 @@ model payments {
 
 model services {
   service_id   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  gym_id       String         @db.Uuid
   name         String         @db.VarChar(100)
   description  String?
   price_rupees Int
@@ -190,9 +188,8 @@ model services {
   is_deleted   Boolean        @default(false)
   gym_services gym_services[]
   payments     payments[]
-  gyms         gyms           @relation(fields: [gym_id], references: [gym_id], onDelete: Cascade, map: "fk_services_gym")
 
-  @@unique([gym_id, name])
+  @@unique([name])
 }
 
 model staff {
@@ -235,18 +232,18 @@ model user_profiles {
   user_id             String       @unique @db.Uuid
   date_of_birth       DateTime?    @db.Date
   gender              gender_enum?
-  address             String?      @db.VarChar(255)
-  city                String?      @db.VarChar(100)
-  state               String?      @db.VarChar(100)
-  zip_code            String?      @db.VarChar(20)
-  country             String?      @db.VarChar(100)
-  profile_picture_url String?      @db.VarChar(500)
   height_cm           Decimal?     @db.Decimal(5, 2)
   weight_kg           Decimal?     @db.Decimal(5, 2)
   food_preferences    String[]     @default([])
   lifestyle           Json?
   created_at          DateTime     @default(now()) @db.Timestamptz(6)
   is_deleted          Boolean      @default(false)
+  address             String?      @db.VarChar(255)
+  city                String?      @db.VarChar(100)
+  country             String?      @db.VarChar(100)
+  profile_picture_url String?      @db.VarChar(500)
+  state               String?      @db.VarChar(100)
+  zip_code            String?      @db.VarChar(20)
   users               users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "fk_profile_user")
 }
 
