@@ -8,8 +8,8 @@
   "main": "index.js",
   "scripts": {
     "seed": "node prisma/seed.js",
-    "build": "npx prisma migrate deploy",
-    "start": "nodemon index.js",
+    "build": "echo skipping this step",
+    "start": "npx prisma migrate deploy && nodemon index.js",
     "dev": "nodemon index.js",
     "test": "jest"
   },
