@@ -12,7 +12,8 @@ const analyticsRoutes = require('./analytics.routes');
 const dashboardRoutes = require('./dashboard.routes');
 const gymTypesRoutes = require('./gymTypes.routes');
 const amenitiesRoutes = require('./amenities.routes');
-
+const leadsRoutes = require('./leads.routes');
+router.use('/leads', leadsRoutes);
 router.use('/users', usersRoutes);
 router.use('/gym-types', gymTypesRoutes);
 router.use('/gyms', gymsRoutes);

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const app = require('./src/app');
+require('./src/utils/leadFollowupScheduler');
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();

@@ -283,6 +283,17 @@ model users {
   user_trainers    user_trainers[]
 }
 
+model Lead {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  email       String
+  phone       String
+  source      String      
+  createdAt   DateTime @default(now())
+  status      String   @default("new")
+}
+
+
 enum attendance_status_enum {
   not_marked
   attended
