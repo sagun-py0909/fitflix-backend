@@ -77,7 +77,7 @@ async function register(req, res) {
     });
   } catch (error) {
     // Handle errors thrown by the service layer
-    if (error.message.includes('Required fields are missing.')) {
+    if (error.message === 'Required fields (email, password, username, first_name, last_name) are missing.') {
       return res.status(400).json({ message: error.message });
     }
     if (error.message.includes('User with this email already exists.') ||

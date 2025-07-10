@@ -17,7 +17,7 @@ services:
     environment:
       POSTGRES_DB: fitflix_dev_db # Database name for development
       POSTGRES_USER: postgres      # Default user
-      POSTGRES_PASSWORD: 12345     # Password (use a strong one in production!)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_DEV:-ChangeMe123!}     # Password loaded from environment variable or defaults to a stronger value
     volumes:
       # Persist data to a named volume to prevent data loss on container stop/remove
       - fitflix_dev_data:/var/lib/postgresql/data
@@ -41,7 +41,7 @@ services:
     environment:
       POSTGRES_DB: fitflix_test_db # Database name for testing
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 12345
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_TEST:-ChangeMe123!}
     volumes:
       # Persist data to a named volume for the test DB
       - fitflix_test_data:/var/lib/postgresql/data
